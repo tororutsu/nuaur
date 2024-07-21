@@ -1,46 +1,85 @@
 #!/usr/bin/env -S nu --stdin
 
+# Define a function named "main build"
+# Parameters:
+#   builddir: path (default: '/home/rj/repos/aur') - Directory where the AUR packages are located
 def "main build" [
     builddir: path = '/home/rj/repos/aur'
 ] {
+    # Change the current directory to the specified build directory
     cd $builddir
+
+    # List all items in the build directory, filter to only include directories, and iterate over each directory
     ls | where type == "dir" | each { |folder|
-        let folder_path = ($builddir | path join $folder.name) 
+        # Construct the full path to the current folder
+        let folder_path = ($builddir | path join $folder.name)
+
+        # Change the current directory to the constructed folder path
         cd $folder_path
+
+        # Print the current working directory to indicate which package is being built
         print "Building: " $env.PWD
+
+        # Run the makechrootpkg command to build the package in the current directory
+        # -cur: Use the current directory as the package source
         makechrootpkg -cur $env.'CHROOT'
     }
-    print "Dont forget to sign Packages with nuaur sign"
+
+    # Print a reminder to sign the packages after building
+    print "Don't forget to sign Packages with nuaur sign"
 }
 
+# Define a function named "main sign"
+# Parameters:
+#   pkgdir: path (default: '/var/cache/pacman/aur') - Directory where the built packages are stored
 def "main sign" [
     pkgdir: path = '/var/cache/pacman/aur'
 ] {
+    # Change the current directory to the specified package directory
     cd $pkgdir
 
+    # List all .zst files (compressed package files) and filter to only include those that don't have a corresponding .sig file (signature file)
     let pkgs = ls *.zst | filter {|row|
         $"($row.name).sig" | path exists | not $in }
+
+    # Get the names of the filtered packages
     let name = $pkgs | get name
+
+    # Iterate over each package name and sign it using GPG (GNU Privacy Guard)
     for pkg in $name {
         gpg --detach-sign --use-agent $pkg
     }
+
+    # Add the signed packages to the repository database and sign the database itself using repo-add
     repo-add --verify --sign aur.db.tar.gz *.pkg.tar.zst
 }
 
+# Define a function named "main search"
+# Parameters:
+#   package: string - Name of the package to search for or fetch
+#   --fetch: flag - Indicates whether to fetch (clone) the package repository
 def "main search" [
     package
     --fetch
 ] {
+    # If the fetch flag is set, clone the package repository from AUR
     if $fetch {
+        # Construct the URL for the package repository
         let cl = "https://aur.archlinux.org/package.git"
         let cp = ($cl | str replace "package" $package)
+
+        # Clone the repository from the constructed URL
         git clone $cp
     } else {
-
+        # Construct the URL for the AUR RPC (Remote Procedure Call) search endpoint
         let url = "https://aur.archlinux.org/rpc/v5/search/package?by=name"
         let search = ($url | str replace "package" $package)
+
+        # Perform an HTTP GET request to the search URL and get the names of the search results
         http get $search | get results.name
     }
 }
 
+# Define an empty main function
+# This function is currently not performing any actions but is defined as a placeholder
 def main [] {}
