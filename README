@@ -49,3 +49,14 @@ Searches for packages in the AUR or fetches the package repository.
 #### Description:
 - If the `--fetch` flag is set, clones the package repository from AUR.
 - If `--fetch` is not set, performs a search for the package using AUR RPC and returns the names of the search results.
+
+## To-Do
+
+- [ ] **Add Error Handling:** Implement error handling for cases where commands fail or directories are not found.
+- [ ] **Configuration File:** Allow configuration of `builddir` and `pkgdir` through a configuration file instead of hardcoded paths.
+- [ ] **Logging:** Add logging functionality to track the build and sign process, including success and failure messages.
+- [ ] **Tests:** Write tests to ensure each function behaves as expected under various scenarios.
+- [ ] **Documentation:** Expand documentation to include detailed explanations of each function and example use cases.
+- [ ] **User Input Validation:** Add validation for user inputs to ensure they are correct and handle invalid inputs gracefully.
+- [ ] **Automation:** Consider automating the process of updating the repository and signing packages on a schedule.
+
