@@ -1,0 +1,46 @@
+#!/usr/bin/env -S nu --stdin
+
+def "main build" [
+    builddir: path = '/home/rj/repos/aur'
+] {
+    cd $builddir
+    ls | where type == "dir" | each { |folder|
+        let folder_path = ($builddir | path join $folder.name) 
+        cd $folder_path
+        print "Building: " $env.PWD
+        makechrootpkg -cur $env.'CHROOT'
+    }
+    print "Dont forget to sign Packages with nuaur sign"
+}
+
+def "main sign" [
+    pkgdir: path = '/var/cache/pacman/aur'
+] {
+    cd $pkgdir
+
+    let pkgs = ls *.zst | filter {|row|
+        $"($row.name).sig" | path exists | not $in }
+    let name = $pkgs | get name
+    for pkg in $name {
+        gpg --detach-sign --use-agent $pkg
+    }
+    repo-add --verify --sign aur.db.tar.gz *.pkg.tar.zst
+}
+
+def "main search" [
+    package
+    --fetch
+] {
+    if $fetch {
+        let cl = "https://aur.archlinux.org/package.git"
+        let cp = ($cl | str replace "package" $package)
+        git clone $cp
+    } else {
+
+        let url = "https://aur.archlinux.org/rpc/v5/search/package?by=name"
+        let search = ($url | str replace "package" $package)
+        http get $search | get results.name
+    }
+}
+
+def main [] {}
