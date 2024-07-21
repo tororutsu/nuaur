@@ -1,0 +1,51 @@
+# Local Repo Management Script
+
+This script is designed for managing signed AUR (Arch User Repository) packages in a local repo using Nushell. It provides functions for building packages, signing them, and searching for packages in the AUR.
+
+## Prerequisites
+
+- **Nushell**: Install Nushell on your system.
+- **Git**: Required for cloning AUR repositories.
+- **GPG**: GNU Privacy Guard for signing packages.
+- **makechrootpkg**: Tool for building packages in a clean chroot environment.
+- **repo-add**: Utility for maintaining Arch Linux package repositories.
+
+## Functions
+
+### `main build`
+
+Builds AUR packages located in a specified directory.
+
+#### Parameters:
+- `builddir`: Path to the directory containing AUR packages (default: `/home/rj/repos/aur`).
+
+#### Description:
+- Changes to the `builddir`.
+- Lists all directories in the `builddir` and iterates over each one.
+- Changes to each directory and runs `makechrootpkg` to build the package.
+- Prints a reminder to sign the packages after building.
+
+### `main sign`
+
+Signs the built packages and updates the repository database.
+
+#### Parameters:
+- `pkgdir`: Path to the directory where built packages are stored (default: `/var/cache/pacman/aur`).
+
+#### Description:
+- Changes to the `pkgdir`.
+- Lists `.zst` files (compressed package files) that do not have a corresponding `.sig` file.
+- Signs each package using GPG.
+- Adds the signed packages to the repository database and signs the database using `repo-add`.
+
+### `main search`
+
+Searches for packages in the AUR or fetches the package repository.
+
+#### Parameters:
+- `package`: Name of the package to search for or fetch.
+- `--fetch`: Flag indicating whether to fetch (clone) the package repository.
+
+#### Description:
+- If the `--fetch` flag is set, clones the package repository from AUR.
+- If `--fetch` is not set, performs a search for the package using AUR RPC and returns the names of the search results.
