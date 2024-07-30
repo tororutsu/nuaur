@@ -1,10 +1,7 @@
 #!/usr/bin/env -S nu --stdin
 
-# Define a function named "main build"
-# Parameters:
-#   builddir: path (default: '/home/rj/repos/aur') - Directory where the AUR packages are located
 def "main build" [
-    builddir: path = '/home/rj/repos/aur'
+    builddir: path = '/home/rj/repos/aur' # Directory where the AUR packages are located
 ] {
     # Change the current directory to the specified build directory
     cd $builddir
@@ -29,11 +26,8 @@ def "main build" [
     print "Don't forget to sign Packages with nuaur sign"
 }
 
-# Define a function named "main sign"
-# Parameters:
-#   pkgdir: path (default: '/var/cache/pacman/aur') - Directory where the built packages are stored
 def "main sign" [
-    pkgdir: path = '/var/cache/pacman/aur'
+    pkgdir: path = '/var/cache/pacman/aur' # Directory where the built packages are stored
 ] {
     # Change the current directory to the specified package directory
     cd $pkgdir
@@ -54,13 +48,9 @@ def "main sign" [
     repo-add --verify --sign aur.db.tar.gz *.pkg.tar.zst
 }
 
-# Define a function named "main search"
-# Parameters:
-#   package: string - Name of the package to search for or fetch
-#   --fetch: flag - Indicates whether to fetch (clone) the package repository
 def "main search" [
-    package
-    --fetch
+    package: string # Name of the package to search for or fetch
+    --fetch # Indicates whether to fetch (clone) the package repository
 ] {
     # If the fetch flag is set, clone the package repository from AUR
     if $fetch {
