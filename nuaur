@@ -1,8 +1,6 @@
 #!/usr/bin/env -S nu --stdin
 
-def "main build" [
-    builddir: path = '/home/rj/repos/aur' # Directory where the AUR packages are located
-] {
+def build_packages [builddir: path] {
     # Change the current directory to the specified build directory
     cd $builddir
 
@@ -21,10 +19,21 @@ def "main build" [
         # -cur: Use the current directory as the package source
         makechrootpkg -cur $env.'CHROOT'
     }
+}
+
+def "main build" [
+    builddir?: path # Directory where the AUR packages are located
+] {
+    # Determine the build directory
+    let builddir = ($builddir | default $env.NUAURBUILD?)
+
+    # Build packages in the specified directory
+    build_packages $builddir
 
     # Print a reminder to sign the packages after building
     print "Don't forget to sign Packages with nuaur sign"
 }
+
 
 def "main sign" [
     pkgdir: path = '/var/cache/pacman/aur' # Directory where the built packages are stored
