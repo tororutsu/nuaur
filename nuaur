@@ -21,6 +21,28 @@ def build_packages [builddir: path] {
     }
 }
 
+def sign_packages [pkgdir: path] {
+    # Change the current directory to the specified package directory
+    cd $pkgdir
+
+    # List all .zst files (compressed package files) and filter to only include those that don't have a corresponding .sig file (signature file)
+    let pkgs = ls *.zst | where {|row|
+        let sig_path = ($row.name + ".sig")
+        not ($sig_path | path exists)
+    }
+
+    # Get the names of the filtered packages
+    let name = $pkgs | get name
+
+    # Iterate over each package name and sign it using GPG (GNU Privacy Guard)
+    for pkg in $name {
+        gpg --detach-sign --use-agent $pkg
+    }
+
+    # Add the signed packages to the repository database and sign the database itself using repo-add
+    repo-add --verify --sign aur.db.tar.gz *.pkg.tar.zst
+}
+
 def "main build" [
     builddir?: path # Directory where the AUR packages are located
 ] {
@@ -34,28 +56,16 @@ def "main build" [
     print "Don't forget to sign Packages with nuaur sign"
 }
 
-
 def "main sign" [
-    pkgdir: path = '/var/cache/pacman/aur' # Directory where the built packages are stored
+    pkgdir?: path # Directory where the built packages are stored
 ] {
-    # Change the current directory to the specified package directory
-    cd $pkgdir
+    # Determine the package directory
+    let pkgdir = ($pkgdir | default $env.NUAURPKG?)
 
-    # List all .zst files (compressed package files) and filter to only include those that don't have a corresponding .sig file (signature file)
-    let pkgs = ls *.zst | filter {|row|
-        $"($row.name).sig" | path exists | not $in }
-
-    # Get the names of the filtered packages
-    let name = $pkgs | get name
-
-    # Iterate over each package name and sign it using GPG (GNU Privacy Guard)
-    for pkg in $name {
-        gpg --detach-sign --use-agent $pkg
-    }
-
-    # Add the signed packages to the repository database and sign the database itself using repo-add
-    repo-add --verify --sign aur.db.tar.gz *.pkg.tar.zst
+    # Sign packages in the specified directory
+    sign_packages $pkgdir
 }
+
 
 def "main search" [
     package: string # Name of the package to search for or fetch
